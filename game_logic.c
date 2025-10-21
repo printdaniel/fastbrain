@@ -12,6 +12,7 @@ const int NUM_TECLAS = 15;
 // Declaración forward para evitar warnings
 void mostrar_estadisticas_reflejos(double tiempos[], int total_intentos, int aciertos);
 
+
 void ejercicio_reflejos_mano_derecha() {
     limpiar_pantalla();
     printf("=====================================\n");
@@ -46,15 +47,16 @@ void ejercicio_reflejos_mano_derecha() {
         printf("\n\n\n         💥 %c 💥\n", letra_objetivo);
         printf("     ¡PRESIONA LA TECLA!\n\n");
 
-        double inicio = obtener_tiempo_actual();
+        // USAR ALTA PRECISIÓN AQUÍ
+        double inicio = obtener_tiempo_actual_alta_precision();
 
         // Leer la tecla presionada (sin esperar Enter)
-        // Versión simplificada para evitar problemas de portabilidad
-        system("stty raw -echo");  // Modo raw para leer sin Enter
+        system("stty raw -echo");
         char tecla_presionada = getchar();
-        system("stty cooked echo"); // Volver al modo normal
+        system("stty cooked echo");
 
-        double fin = obtener_tiempo_actual();
+        // USAR ALTA PRECISIÓN AQUÍ TAMBIÉN
+        double fin = obtener_tiempo_actual_alta_precision();
         double tiempo_reaccion = (fin - inicio) * 1000; // Convertir a milisegundos
 
         // Verificar si es correcta
