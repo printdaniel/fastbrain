@@ -36,7 +36,7 @@ int main() {
                 ejercicio_reflejos_mano_derecha();
                 break;
             case 2:
-                printf("Próximamente: Caza de Caracteres\n");
+                ejercicio_caza_caracteres();
                 break;
             case 3:
                 printf("Próximamente: Cálculo Mental\n");
