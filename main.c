@@ -39,7 +39,7 @@ int main() {
                 ejercicio_caza_caracteres();
                 break;
             case 3:
-                printf("Próximamente: Cálculo Mental\n");
+                ejercicio_calculo_mental();
                 break;
             case 4:
                 printf("Próximamente: Memoria de Números\n");

@@ -319,3 +319,239 @@ void mostrar_estadisticas_caza(double tiempos[], int total_rondas, int aciertos)
     while ((c = getchar()) != '\n' && c != EOF);
     getchar();
 }
+
+
+//----------------------------------------------------------------------------
+void ejercicio_calculo_mental() {
+    limpiar_pantalla();
+    printf("=====================================\n");
+    printf("         🧮 CÁLCULO MENTAL 🧮\n");
+    printf("=====================================\n");
+    printf("Instrucciones:\n");
+    printf("- Resuelve operaciones matemáticas mentalmente\n");
+    printf("- Tienes tiempo limitado por operación\n");
+    printf("- +1 punto por acierto, bonus por velocidad\n");
+    printf("- ¡Desafía tu agilidad numérica!\n");
+    printf("\nPresiona ENTER para comenzar...");
+
+    // Limpiar buffer
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+
+    int total_operaciones = 8;
+    int puntuacion = 0;
+    int aciertos = 0;
+    double tiempos[total_operaciones];
+
+    // Niveles de dificultad
+    int nivel_actual = 1;
+    int operaciones_por_nivel = 2;
+
+    for(int op = 0; op < total_operaciones; op++) {
+        // Avanzar nivel cada 2 operaciones
+        if(op > 0 && op % operaciones_por_nivel == 0) {
+            nivel_actual++;
+        }
+
+        limpiar_pantalla();
+        printf("Cálculo Mental | Op %d/%d | Nivel %d\n", op + 1, total_operaciones, nivel_actual);
+        printf("=====================================\n");
+
+        // Generar operación según nivel
+        int a, b, resultado_correcto;
+        char operador;
+        int tiempo_limite;
+
+        generar_operacion(nivel_actual, &a, &b, &operador, &resultado_correcto, &tiempo_limite);
+
+        // Mostrar operación
+        printf("\n\n    ");
+        if(operador == '+' || operador == '-' || operador == '*') {
+            printf("%2d %c %2d = ?", a, operador, b);
+        } else {
+            printf("(%d %c %d) = ?", a, operador, b);
+        }
+
+        printf("\n\n    Tiempo límite: %d segundos\n", tiempo_limite);
+        printf("\n    Tu respuesta: ");
+        fflush(stdout);
+
+        double inicio = obtener_tiempo_actual_alta_precision();
+
+        // Leer respuesta del usuario
+        int respuesta_usuario;
+        int leido = 0;
+        double tiempo_transcurrido = 0;
+
+        while(tiempo_transcurrido < tiempo_limite) {
+            // Intentar leer la respuesta
+            if(scanf("%d", &respuesta_usuario) == 1) {
+                leido = 1;
+                break;
+            }
+
+            // Limpiar buffer si hay error
+            while ((c = getchar()) != '\n' && c != EOF);
+
+            // Actualizar tiempo
+            double tiempo_actual = obtener_tiempo_actual_alta_precision();
+            tiempo_transcurrido = tiempo_actual - inicio;
+        }
+
+        double fin = obtener_tiempo_actual_alta_precision();
+        double tiempo_respuesta = (fin - inicio) * 1000;
+
+        // Limpiar buffer
+        while ((c = getchar()) != '\n' && c != EOF);
+
+        // Verificar resultado
+        limpiar_pantalla();
+        printf("Cálculo Mental | Op %d/%d | Nivel %d\n", op + 1, total_operaciones, nivel_actual);
+        printf("=====================================\n");
+
+        if(leido && respuesta_usuario == resultado_correcto && tiempo_respuesta <= tiempo_limite * 1000) {
+            printf("✅ ¡CORRECTO! %d %c %d = %d\n", a, operador, b, resultado_correcto);
+            printf("   Tiempo: %.0f ms\n", tiempo_respuesta);
+
+            // Calcular puntos (más puntos por mayor velocidad)
+            int puntos_base = nivel_actual * 10;
+            double factor_velocidad = 1.0 - (tiempo_respuesta / (tiempo_limite * 2000.0));
+            int puntos_extra = (int)(puntos_base * factor_velocidad);
+            int puntos_ronda = puntos_base + puntos_extra;
+
+            printf("   Puntos: +%d (%d base + %d velocidad)\n", puntos_ronda, puntos_base, puntos_extra);
+
+            puntuacion += puntos_ronda;
+            aciertos++;
+            tiempos[op] = tiempo_respuesta;
+        } else if(tiempo_respuesta > tiempo_limite * 1000) {
+            printf("❌ ¡TIEMPO AGOTADO! %d %c %d = %d\n", a, operador, b, resultado_correcto);
+            tiempos[op] = -1;
+        } else if(leido && respuesta_usuario != resultado_correcto) {
+            printf("❌ ERROR: Dijiste %d, era %d\n", respuesta_usuario, resultado_correcto);
+            printf("   %d %c %d = %d\n", a, operador, b, resultado_correcto);
+            tiempos[op] = -1;
+        } else {
+            printf("❌ NO RESPONDISTE: %d %c %d = %d\n", a, operador, b, resultado_correcto);
+            tiempos[op] = -1;
+        }
+
+        if(op < total_operaciones - 1) {
+            printf("\nSiguiente operación en 2 segundos...\n");
+            pausa_ms(2000);
+        }
+    }
+
+    // Mostrar estadísticas
+    mostrar_estadisticas_calculo(tiempos, total_operaciones, aciertos, puntuacion);
+}
+
+
+void generar_operacion(int nivel, int *a, int *b, char *operador, int *resultado, int *tiempo_limite) {
+    switch(nivel) {
+        case 1: // Sumas y restas básicas
+            *a = 1 + rand() % 20;
+            *b = 1 + rand() % 20;
+            *operador = (rand() % 2 == 0) ? '+' : '-';
+            *tiempo_limite = 8;
+            break;
+
+        case 2: // Multiplicaciones simples
+            *a = 2 + rand() % 12;
+            *b = 2 + rand() % 12;
+            *operador = '*';
+            *tiempo_limite = 10;
+            break;
+
+        case 3: // Operaciones combinadas
+            if(rand() % 2 == 0) {
+                *a = 10 + rand() % 40;
+                *b = 2 + rand() % 9;
+                *operador = (rand() % 2 == 0) ? '+' : '-';
+            } else {
+                *a = 3 + rand() % 15;
+                *b = 3 + rand() % 8;
+                *operador = '*';
+            }
+            *tiempo_limite = 12;
+            break;
+
+        case 4: // Operaciones complejas
+            *a = 20 + rand() % 50;
+            *b = 5 + rand() % 25;
+            *operador = (rand() % 3 == 0) ? '+' : (rand() % 2 == 0) ? '-' : '*';
+            *tiempo_limite = 15;
+            break;
+    }
+
+    // Calcular resultado
+    switch(*operador) {
+        case '+': *resultado = *a + *b; break;
+        case '-':
+            // Asegurar que no dé negativo
+            if(*a < *b) { int temp = *a; *a = *b; *b = temp; }
+            *resultado = *a - *b;
+            break;
+        case '*': *resultado = *a * *b; break;
+    }
+}
+
+void mostrar_estadisticas_calculo(double tiempos[], int total_ops, int aciertos, int puntuacion) {
+    // AGREGAR ESTA LÍNEA AL INICIO DE LA FUNCIÓN:
+    int c;
+
+    limpiar_pantalla();
+    printf("=====================================\n");
+    printf("     📊 ESTADÍSTICAS CÁLCULO\n");
+    printf("=====================================\n");
+
+    double suma_tiempos = 0;
+    double mejor_tiempo = 9999;
+    int tiempos_validos = 0;
+
+    printf("\nResultados por operación:\n");
+    for(int i = 0; i < total_ops; i++) {
+        printf("Op %d: ", i + 1);
+        if(tiempos[i] > 0) {
+            printf("%.0f ms ✅\n", tiempos[i]);
+            suma_tiempos += tiempos[i];
+            tiempos_validos++;
+            if(tiempos[i] < mejor_tiempo) {
+                mejor_tiempo = tiempos[i];
+            }
+        } else {
+            printf("Error/Tiempo ❌\n");
+        }
+    }
+
+    printf("\n--- RESUMEN ---\n");
+    printf("Aciertos: %d/%d (%.1f%%)\n",
+           aciertos, total_ops,
+           (aciertos * 100.0) / total_ops);
+    printf("Puntuación total: %d puntos\n", puntuacion);
+
+    if(tiempos_validos > 0) {
+        double promedio = suma_tiempos / tiempos_validos;
+        printf("Tiempo promedio: %.0f ms\n", promedio);
+        printf("Mejor tiempo: %.0f ms\n", mejor_tiempo);
+
+        // Evaluación
+        printf("\n🏆 EVALUACIÓN:\n");
+        if(puntuacion >= 300)
+            printf("¡GENIO MATEMÁTICO! 🧠\n");
+        else if(puntuacion >= 200)
+            printf("Excelente cálculo mental 💪\n");
+        else if(puntuacion >= 100)
+            printf("Buen trabajo, sigue practicando 📈\n");
+        else
+            printf("Sigue entrenando, mejorarás 🎯\n");
+
+        printf("\n💡 Tip: Practica diariamente para mejorar tu velocidad\n");
+    }
+
+    printf("\nPresiona ENTER para volver al menú...");
+    while ((c = getchar()) != '\n' && c != EOF);
+    getchar();
+}
+
+
