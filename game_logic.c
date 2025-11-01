@@ -554,4 +554,177 @@ void mostrar_estadisticas_calculo(double tiempos[], int total_ops, int aciertos,
     getchar();
 }
 
+//----------------------------------------------------------------------------
+void ejercicio_memoria_numeros() {
+    limpiar_pantalla();
+    printf("=====================================\n");
+    printf("       🔢 MEMORIA DE NÚMEROS 🔢\n");
+    printf("=====================================\n");
+    printf("Instrucciones:\n");
+    printf("- Memoriza la secuencia de números\n");
+    printf("- Luego repítela en el mismo orden\n");
+    printf("- La longitud aumenta cada 2 rondas\n");
+    printf("- ¡Ejercita tu memoria a corto plazo!\n");
+    printf("\nPresiona ENTER para comenzar...");
+
+    // Limpiar buffer
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+
+    int total_rondas = 5;
+    int aciertos = 0;
+    int longitud_maxima = 0;
+    int secuencia_correcta[7]; // Máximo 7 números
+    int secuencia_usuario[7];
+
+    for(int ronda = 0; ronda < total_rondas; ronda++) {
+        // Determinar longitud de la secuencia (4-7 números)
+        int longitud_secuencia = 4 + (ronda / 2); // Aumenta cada 2 rondas
+        if(longitud_secuencia > 7) longitud_secuencia = 7;
+
+        if(longitud_secuencia > longitud_maxima) {
+            longitud_maxima = longitud_secuencia;
+        }
+
+        limpiar_pantalla();
+        printf("Memoria de Números | Ronda %d/%d\n", ronda + 1, total_rondas);
+        printf("=====================================\n");
+        printf("Longitud de secuencia: %d números\n\n", longitud_secuencia);
+
+        // Generar secuencia aleatoria
+        printf("🎯 MEMORIZA ESTA SECUENCIA:\n\n");
+        printf("    ");
+        for(int i = 0; i < longitud_secuencia; i++) {
+            secuencia_correcta[i] = rand() % 10; // Números del 0-9
+            printf("%d ", secuencia_correcta[i]);
+        }
+        printf("\n\n");
+
+        // Tiempo para memorizar (depende de la longitud)
+        int tiempo_memorizacion = 3 + (longitud_secuencia * 2);
+        printf("Tienes %d segundos para memorizar...\n", tiempo_memorizacion);
+
+        for(int i = tiempo_memorizacion; i > 0; i--) {
+            printf("%d... ", i);
+            fflush(stdout);
+            pausa_ms(1000);
+        }
+
+        limpiar_pantalla();
+        printf("Memoria de Números | Ronda %d/%d\n", ronda + 1, total_rondas);
+        printf("=====================================\n");
+        printf("Longitud: %d números\n\n", longitud_secuencia);
+
+        // Ahora el usuario debe reproducir la secuencia
+        printf("🔁 REPITE LA SECUENCIA (escribe los números separados por espacios):\n\n");
+        printf("    ");
+
+        // Leer la secuencia del usuario
+        int secuencia_correcta_flag = 1;
+        for(int i = 0; i < longitud_secuencia; i++) {
+            int numero;
+            if(scanf("%d", &numero) == 1) {
+                secuencia_usuario[i] = numero;
+                if(numero != secuencia_correcta[i]) {
+                    secuencia_correcta_flag = 0;
+                }
+            } else {
+                secuencia_correcta_flag = 0;
+                break;
+            }
+        }
+
+        // Limpiar buffer
+        while ((c = getchar()) != '\n' && c != EOF);
+
+        // Mostrar resultados
+        limpiar_pantalla();
+        printf("Memoria de Números | Ronda %d/%d\n", ronda + 1, total_rondas);
+        printf("=====================================\n");
+
+        if(secuencia_correcta_flag) {
+            printf("✅ ¡SECUENCIA CORRECTA!\n\n");
+            printf("Secuencia original: ");
+            for(int i = 0; i < longitud_secuencia; i++) {
+                printf("%d ", secuencia_correcta[i]);
+            }
+            printf("\nTu respuesta:      ");
+            for(int i = 0; i < longitud_secuencia; i++) {
+                printf("%d ", secuencia_usuario[i]);
+            }
+            printf("\n\n¡Memoria excelente! 🧠\n");
+            aciertos++;
+        } else {
+            printf("❌ SECUENCIA INCORRECTA\n\n");
+            printf("Secuencia original: ");
+            for(int i = 0; i < longitud_secuencia; i++) {
+                printf("%d ", secuencia_correcta[i]);
+            }
+            printf("\nTu respuesta:      ");
+            for(int i = 0; i < longitud_secuencia; i++) {
+                printf("%d ", secuencia_usuario[i]);
+            }
+            printf("\n\n💡 Tip: Concéntrate en grupos de 2-3 números\n");
+        }
+
+        if(ronda < total_rondas - 1) {
+            printf("\nSiguiente ronda en 3 segundos...\n");
+            pausa_ms(3000);
+        }
+    }
+
+    // Mostrar estadísticas
+    mostrar_estadisticas_memoria(total_rondas, aciertos, longitud_maxima);
+}
+
+
+
+void mostrar_estadisticas_memoria(int total_rondas, int aciertos, int longitud_maxima) {
+    int c; // Declarar variable c para limpiar buffer
+
+    limpiar_pantalla();
+    printf("=====================================\n");
+    printf("    📊 ESTADÍSTICAS MEMORIA\n");
+    printf("=====================================\n");
+
+    printf("\n--- RESUMEN ---\n");
+    printf("Rondas completadas: %d/%d\n", total_rondas, total_rondas);
+    printf("Secuencias correctas: %d/%d (%.1f%%)\n",
+           aciertos, total_rondas,
+           (aciertos * 100.0) / total_rondas);
+    printf("Longitud máxima alcanzada: %d números\n", longitud_maxima);
+
+    // Evaluación
+    printf("\n🏆 EVALUACIÓN:\n");
+    if(aciertos == total_rondas && longitud_maxima >= 6) {
+        printf("¡MEMORIA FOTOGRÁFICA! 📸\n");
+        printf("Tu memoria a corto plazo es excelente\n");
+    } else if(aciertos >= total_rondas - 1) {
+        printf("¡MEMORIA SOBRESALIENTE! 💪\n");
+        printf("Muy buena retención de información\n");
+    } else if(aciertos >= total_rondas - 2) {
+        printf("BUENA MEMORIA 📈\n");
+        printf("Sigue practicando para mejorar\n");
+    } else {
+        printf("MEMORIA EN ENTRENAMIENTO 🎯\n");
+        printf("La práctica constante te hará mejorar\n");
+    }
+
+    // Tips según el desempeño
+    printf("\n💡 TIPS PARA MEJORAR:\n");
+    if(longitud_maxima < 5) {
+        printf("- Agrupa números en pares (12 34 56)\n");
+        printf("- Asocia números con imágenes mentales\n");
+    } else if(longitud_maxima < 7) {
+        printf("- Usa el método de loci (palacio mental)\n");
+        printf("- Crea historias con los números\n");
+    } else {
+        printf("- Desafíate con secuencias de 8+ números\n");
+        printf("- Practica con intervalos de tiempo mayores\n");
+    }
+
+    printf("\nPresiona ENTER para volver al menú...");
+    while ((c = getchar()) != '\n' && c != EOF);
+    getchar();
+}
 

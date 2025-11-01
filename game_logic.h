@@ -15,6 +15,7 @@ void ejercicio_calculo_mental();
 void generar_operacion(int nivel, int *a, int *b, char *operador, int *resultado, int *tiempo_limite);
 void mostrar_estadisticas_calculo(double tiempos[], int total_ops, int aciertos, int puntuacion);
 
+// Ejercicio memoria
 void ejercicio_memoria_numeros();
-
+void mostrar_estadisticas_memoria(int total_rondas, int aciertos, int longitud_maxima);
 #endif

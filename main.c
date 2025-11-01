@@ -42,7 +42,7 @@ int main() {
                 ejercicio_calculo_mental();
                 break;
             case 4:
-                printf("Próximamente: Memoria de Números\n");
+                ejercicio_memoria_numeros();
                 break;
             case 5:
                 printf("¡Hasta la próxima! Sigue entrenando 🧠\n");
