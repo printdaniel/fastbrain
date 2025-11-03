@@ -1,39 +1,48 @@
-# Compilador
+# FastBrain - Makefile
 CC = gcc
-# Opciones de compilación
-CFLAGS = -Wall -Wextra -std=c99 -O2
-# Bibliotecas
-LIBS =
-
-# Archivos fuente
-SRCS = main.c game_logic.c utils.c
-# Archivos objeto
-OBJS = $(SRCS:.c=.o)
-# Nombre del ejecutable
+CFLAGS = -Wall -Wextra -std=gnu99 -O2
 TARGET = fastbrain
+SOURCES = main.c game_logic.c utils.c
+OBJECTS = $(SOURCES:.c=.o)
 
-# Regla principal
+# Colores para output
+GREEN = \033[0;32m
+BLUE = \033[0;34m
+NC = \033[0m # No Color
+
+.PHONY: all clean install uninstall
+
 all: $(TARGET)
 
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+$(TARGET): $(OBJECTS)
+	@echo "$(BLUE)🔨 Compilando FastBrain...$(NC)"
+	$(CC) $(CFLAGS) -o $(TARGET) $(OBJECTS)
+	@echo "$(GREEN)✅ FastBrain compilado exitosamente!$(NC)"
+	@echo "$(BLUE)🎮 Ejecutar con: ./$(TARGET)$(NC)"
 
-# Reglas para archivos objeto
-main.o: main.c game_logic.h utils.h
-	$(CC) $(CFLAGS) -c main.c
+%.o: %.c
+	$(CC) $(CFLAGS) -c $< -o $@
 
-game_logic.o: game_logic.c game_logic.h utils.h
-	$(CC) $(CFLAGS) -c game_logic.c
-
-utils.o: utils.c utils.h
-	$(CC) $(CFLAGS) -c utils.c
-
-# Limpiar archivos compilados
 clean:
-	rm -f $(OBJS) $(TARGET)
+	@echo "$(BLUE)🧹 Limpiando archivos compilados...$(NC)"
+	rm -f $(TARGET) $(OBJECTS)
+	@echo "$(GREEN)✅ Limpieza completada!$(NC)"
 
-# Instalar (copiar a /usr/local/bin)
 install: $(TARGET)
+	@echo "$(BLUE)📦 Instalando FastBrain...$(NC)"
 	cp $(TARGET) /usr/local/bin/
+	@echo "$(GREEN)✅ FastBrain instalado en /usr/local/bin/$(NC)"
+	@echo "$(BLUE)🎮 Ahora puedes ejecutar desde cualquier lugar con: fastbrain$(NC)"
 
-.PHONY: all clean install
+uninstall:
+	@echo "$(BLUE)🗑️ Desinstalando FastBrain...$(NC)"
+	rm -f /usr/local/bin/$(TARGET)
+	@echo "$(GREEN)✅ FastBrain desinstalado!$(NC)"
+
+help:
+	@echo "FastBrain - Opciones de compilación:"
+	@echo "  make all     - Compila el proyecto (por defecto)"
+	@echo "  make clean   - Limpia archivos compilados"
+	@echo "  make install - Instala en /usr/local/bin/"
+	@echo "  make uninstall - Desinstala el programa"
+	@echo "  make help    - Muestra esta ayuda"
