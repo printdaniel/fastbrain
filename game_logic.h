@@ -41,6 +41,17 @@ typedef struct {
     int capacidad_secuencia;  // Tamaño del array (máximo 7 por defecto)
 } DatosMemoria;
 
+// Estructura para los datos del ejercicio Stroop Test
+typedef struct {
+    int total_rondas;
+    int aciertos;
+    int errores_congruentes;   // Errores en trials fáciles (color = palabra)
+    int errores_incongruentes; // Errores en trials difíciles (color != palabra)
+    double *tiempos;           // Array dinámico de tiempos
+    int *fue_congruente;       // Array: 1=congruente, 0=incongruente
+    int *fue_correcto;         // Array: 1=correcto, 0=error
+} DatosStroop;
+
 // ============================================================================
 // FUNCIONES DE GESTIÓN DE MEMORIA
 // ============================================================================
@@ -60,6 +71,10 @@ void liberar_datos_calculo(DatosCalculo *datos);
 // Memoria
 DatosMemoria* crear_datos_memoria(int num_rondas, int capacidad_secuencia);
 void liberar_datos_memoria(DatosMemoria *datos);
+
+// Stroop Test
+DatosStroop* crear_datos_stroop(int num_rondas);
+void liberar_datos_stroop(DatosStroop *datos);
 
 // ============================================================================
 // FUNCIONES DE EJERCICIOS (INTERFAZ PÚBLICA)
@@ -81,5 +96,9 @@ void mostrar_estadisticas_calculo(DatosCalculo *datos);
 // Ejercicio memoria
 void ejercicio_memoria_numeros();
 void mostrar_estadisticas_memoria(DatosMemoria *datos);
+
+// Ejercicio Stroop Test
+void ejercicio_stroop_test();
+void mostrar_estadisticas_stroop(DatosStroop *datos);
 
 #endif

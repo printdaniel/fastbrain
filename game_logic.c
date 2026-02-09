@@ -974,3 +974,376 @@ void mostrar_estadisticas_memoria(DatosMemoria *datos) {
     while ((c = getchar()) != '\n' && c != EOF);
     getchar();
 }
+
+
+
+
+// ============================================================================
+// FUNCIONES DE GESTIÓN DE MEMORIA - STROOP TEST
+// ============================================================================
+
+DatosStroop* crear_datos_stroop(int num_rondas) {
+    if (num_rondas <= 0 || num_rondas > 100) {
+        fprintf(stderr, "Error: num_rondas debe estar entre 1 y 100\n");
+        return NULL;
+    }
+
+    DatosStroop *datos = (DatosStroop*)malloc(sizeof(DatosStroop));
+    if (datos == NULL) {
+        fprintf(stderr, "Error: No se pudo reservar memoria para DatosStroop\n");
+        return NULL;
+    }
+
+    datos->total_rondas = num_rondas;
+    datos->aciertos = 0;
+    datos->errores_congruentes = 0;
+    datos->errores_incongruentes = 0;
+
+    datos->tiempos = (double*)malloc(num_rondas * sizeof(double));
+    if (datos->tiempos == NULL) {
+        free(datos);
+        return NULL;
+    }
+
+    datos->fue_congruente = (int*)malloc(num_rondas * sizeof(int));
+    if (datos->fue_congruente == NULL) {
+        free(datos->tiempos);
+        free(datos);
+        return NULL;
+    }
+
+    datos->fue_correcto = (int*)malloc(num_rondas * sizeof(int));
+    if (datos->fue_correcto == NULL) {
+        free(datos->fue_congruente);
+        free(datos->tiempos);
+        free(datos);
+        return NULL;
+    }
+
+    for (int i = 0; i < num_rondas; i++) {
+        datos->tiempos[i] = -1.0;
+        datos->fue_congruente[i] = 0;
+        datos->fue_correcto[i] = 0;
+    }
+
+    return datos;
+}
+
+void liberar_datos_stroop(DatosStroop *datos) {
+    if (datos == NULL) return;
+
+    if (datos->fue_correcto != NULL) free(datos->fue_correcto);
+    if (datos->fue_congruente != NULL) free(datos->fue_congruente);
+    if (datos->tiempos != NULL) free(datos->tiempos);
+    free(datos);
+}
+
+// ============================================================================
+// EJERCICIO 5: STROOP TEST
+// ============================================================================
+
+// Definición de colores y palabras
+typedef struct {
+    const char *nombre;      // Nombre del color
+    const char *codigo_ansi; // Código ANSI para imprimir en ese color
+    char tecla;              // Tecla que representa el color
+} ColorInfo;
+
+// Tabla de colores disponibles
+static const ColorInfo COLORES[] = {
+    {"ROJO",     "\033[31m", 'R'},  // Rojo
+    {"VERDE",    "\033[32m", 'V'},  // Verde
+    {"AZUL",     "\033[34m", 'A'},  // Azul
+    {"AMARILLO", "\033[33m", 'M'},  // Amarillo (aMarillo para evitar conflicto con Azul)
+};
+static const int NUM_COLORES = 4;
+static const char *RESET_COLOR = "\033[0m";
+
+void ejercicio_stroop_test() {
+    limpiar_pantalla();
+    printf("=====================================\n");
+    printf("         🎨 STROOP TEST 🎨\n");
+    printf("=====================================\n");
+    printf("Instrucciones:\n");
+    printf("- Verás palabras de COLORES escritas en diferentes colores\n");
+    printf("- Debes identificar el COLOR de la tinta, NO la palabra\n");
+    printf("- Ejemplo: 'ROJO' escrito en azul → presiona 'A' (azul)\n");
+    printf("- ¡Entrena tu control inhibitorio!\n\n");
+
+    printf("Teclas:\n");
+    printf("  R = Rojo\n");
+    printf("  V = Verde\n");
+    printf("  A = Azul\n");
+    printf("  M = Amarillo\n");
+
+    int num_rondas;
+    printf("\n¿Cuántas rondas quieres hacer? (1-30, recomendado 15): ");
+
+    if (scanf("%d", &num_rondas) != 1 || num_rondas <= 0 || num_rondas > 30) {
+        printf("❌ Número inválido. Usando 15 rondas por defecto.\n");
+        num_rondas = 15;
+        int c;
+        while ((c = getchar()) != '\n' && c != EOF);
+    }
+
+    printf("\nPresiona ENTER para comenzar...");
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+
+    DatosStroop *datos = crear_datos_stroop(num_rondas);
+    if (datos == NULL) {
+        printf("❌ Error al inicializar el ejercicio.\n");
+        pausa_ms(2000);
+        return;
+    }
+
+    // Mezcla de trials congruentes (50%) e incongruentes (50%)
+    int rondas_congruentes = num_rondas / 2;
+    int rondas_incongruentes = num_rondas - rondas_congruentes;
+
+    for (int ronda = 0; ronda < datos->total_rondas; ronda++) {
+        limpiar_pantalla();
+        printf("Stroop Test | Ronda %d/%d\n", ronda + 1, datos->total_rondas);
+        printf("=====================================\n");
+
+        // Decidir si esta ronda es congruente o incongruente
+        int es_congruente;
+        if (ronda < rondas_congruentes) {
+            es_congruente = 1;
+        } else {
+            es_congruente = 0;
+        }
+
+        // Mezclar para que no sean predecibles
+        if (rand() % 2 == 0 && ronda > 0) {
+            es_congruente = !es_congruente;
+        }
+
+        datos->fue_congruente[ronda] = es_congruente;
+
+        int idx_palabra, idx_color;
+
+        if (es_congruente) {
+            // Congruente: palabra y color coinciden
+            idx_palabra = rand() % NUM_COLORES;
+            idx_color = idx_palabra;
+        } else {
+            // Incongruente: palabra y color diferentes
+            idx_palabra = rand() % NUM_COLORES;
+            do {
+                idx_color = rand() % NUM_COLORES;
+            } while (idx_color == idx_palabra);
+        }
+
+        const char *palabra = COLORES[idx_palabra].nombre;
+        const char *color_codigo = COLORES[idx_color].codigo_ansi;
+        char tecla_correcta = COLORES[idx_color].tecla;
+
+        // Cuenta regresiva
+        printf("\n\n🎯 Preparado...\n");
+        pausa_ms(1000);
+
+        limpiar_pantalla();
+        printf("Stroop Test | Ronda %d/%d\n", ronda + 1, datos->total_rondas);
+        printf("=====================================\n");
+
+        // Mostrar el estímulo Stroop
+        printf("\n\n\n");
+        printf("         ╔═══════════════╗\n");
+        printf("         ║               ║\n");
+        printf("         ║   %s%s%s   ║\n", color_codigo, palabra, RESET_COLOR);
+        printf("         ║               ║\n");
+        printf("         ╚═══════════════╝\n");
+        printf("\n\n");
+        printf("    ¿Qué COLOR ves? (R/V/A/M): ");
+        fflush(stdout);
+
+        double inicio = obtener_tiempo_actual_alta_precision();
+
+        // Leer respuesta
+        system("stty raw -echo");
+        char tecla_presionada = getchar();
+        system("stty cooked echo");
+
+        // Convertir a mayúscula
+        if (tecla_presionada >= 'a' && tecla_presionada <= 'z') {
+            tecla_presionada = tecla_presionada - 'a' + 'A';
+        }
+
+        double fin = obtener_tiempo_actual_alta_precision();
+        double tiempo_reaccion = (fin - inicio) * 1000;
+
+        datos->tiempos[ronda] = tiempo_reaccion;
+
+        // Verificar respuesta
+        limpiar_pantalla();
+        printf("Stroop Test | Ronda %d/%d\n", ronda + 1, datos->total_rondas);
+        printf("=====================================\n");
+
+        printf("\nPalabra mostrada: %s\n", palabra);
+        printf("Color de la tinta: %s%s%s\n", color_codigo, COLORES[idx_color].nombre, RESET_COLOR);
+        printf("Respuesta correcta: %c (%s)\n", tecla_correcta, COLORES[idx_color].nombre);
+        printf("Tu respuesta: %c\n", tecla_presionada);
+        printf("Tiempo: %.0f ms\n\n", tiempo_reaccion);
+
+        if (tecla_presionada == tecla_correcta) {
+            printf("✅ ¡CORRECTO!\n");
+            datos->aciertos++;
+            datos->fue_correcto[ronda] = 1;
+        } else {
+            printf("❌ ERROR\n");
+            datos->fue_correcto[ronda] = 0;
+
+            // Contar tipo de error
+            if (es_congruente) {
+                datos->errores_congruentes++;
+            } else {
+                datos->errores_incongruentes++;
+            }
+        }
+
+        if (es_congruente) {
+            printf("Tipo: CONGRUENTE (fácil)\n");
+        } else {
+            printf("Tipo: INCONGRUENTE (difícil)\n");
+        }
+
+        if (ronda < datos->total_rondas - 1) {
+            printf("\nSiguiente en 2 segundos...\n");
+            pausa_ms(2000);
+        }
+    }
+
+    mostrar_estadisticas_stroop(datos);
+    liberar_datos_stroop(datos);
+}
+
+void mostrar_estadisticas_stroop(DatosStroop *datos) {
+    if (datos == NULL) return;
+
+    limpiar_pantalla();
+    printf("=====================================\n");
+    printf("      📊 ESTADÍSTICAS STROOP\n");
+    printf("=====================================\n");
+
+    // Calcular estadísticas separadas
+    double suma_tiempos_congruente = 0, suma_tiempos_incongruente = 0;
+    int aciertos_congruente = 0, aciertos_incongruente = 0;
+    int count_congruente = 0, count_incongruente = 0;
+    double mejor_tiempo = 9999;
+
+    printf("\nResultados detallados:\n");
+    for (int i = 0; i < datos->total_rondas; i++) {
+        printf("Ronda %2d [%s]: ", i + 1,
+               datos->fue_congruente[i] ? "CON" : "INC");
+
+        if (datos->fue_correcto[i]) {
+            printf("%.0f ms ✅\n", datos->tiempos[i]);
+
+            if (datos->fue_congruente[i]) {
+                suma_tiempos_congruente += datos->tiempos[i];
+                aciertos_congruente++;
+                count_congruente++;
+            } else {
+                suma_tiempos_incongruente += datos->tiempos[i];
+                aciertos_incongruente++;
+                count_incongruente++;
+            }
+
+            if (datos->tiempos[i] < mejor_tiempo) {
+                mejor_tiempo = datos->tiempos[i];
+            }
+        } else {
+            printf("Error ❌\n");
+
+            if (datos->fue_congruente[i]) {
+                count_congruente++;
+            } else {
+                count_incongruente++;
+            }
+        }
+    }
+
+    printf("\n--- RESUMEN GENERAL ---\n");
+    printf("Aciertos totales: %d/%d (%.1f%%)\n",
+           datos->aciertos, datos->total_rondas,
+           (datos->aciertos * 100.0) / datos->total_rondas);
+    printf("Mejor tiempo: %.0f ms\n", mejor_tiempo);
+
+    printf("\n--- ANÁLISIS POR TIPO ---\n");
+
+    // Congruentes
+    if (count_congruente > 0) {
+        double promedio_congruente = suma_tiempos_congruente / aciertos_congruente;
+        printf("CONGRUENTES (fáciles):\n");
+        printf("  Aciertos: %d/%d (%.1f%%)\n",
+               aciertos_congruente, count_congruente,
+               (aciertos_congruente * 100.0) / count_congruente);
+        if (aciertos_congruente > 0) {
+            printf("  Tiempo promedio: %.0f ms\n", promedio_congruente);
+        }
+    }
+
+    // Incongruentes
+    if (count_incongruente > 0) {
+        double promedio_incongruente = suma_tiempos_incongruente / aciertos_incongruente;
+        printf("INCONGRUENTES (difíciles):\n");
+        printf("  Aciertos: %d/%d (%.1f%%)\n",
+               aciertos_incongruente, count_incongruente,
+               (aciertos_incongruente * 100.0) / count_incongruente);
+        if (aciertos_incongruente > 0) {
+            printf("  Tiempo promedio: %.0f ms\n", promedio_incongruente);
+        }
+    }
+
+    // Calcular "efecto Stroop" (diferencia de tiempos)
+    if (aciertos_congruente > 0 && aciertos_incongruente > 0) {
+        double promedio_congruente = suma_tiempos_congruente / aciertos_congruente;
+        double promedio_incongruente = suma_tiempos_incongruente / aciertos_incongruente;
+        double efecto_stroop = promedio_incongruente - promedio_congruente;
+
+        printf("\n🧠 EFECTO STROOP:\n");
+        printf("  Diferencia de tiempo: %.0f ms\n", efecto_stroop);
+        printf("  (Cuánto más lento eres en trials difíciles)\n");
+
+        if (efecto_stroop < 100) {
+            printf("  ¡Excelente control inhibitorio! 🏆\n");
+        } else if (efecto_stroop < 200) {
+            printf("  Buen control, sigue practicando 💪\n");
+        } else {
+            printf("  Hay margen de mejora 📈\n");
+        }
+    }
+
+    printf("\n🏆 EVALUACIÓN GENERAL:\n");
+    double accuracy = (datos->aciertos * 100.0) / datos->total_rondas;
+
+    if (accuracy >= 90 && mejor_tiempo < 800) {
+        printf("¡MAESTRO DEL CONTROL INHIBITORIO! 🧠\n");
+        printf("Tu función ejecutiva es excelente\n");
+    } else if (accuracy >= 80) {
+        printf("¡MUY BUEN CONTROL! 💪\n");
+        printf("Tu corteza prefrontal está trabajando bien\n");
+    } else if (accuracy >= 70) {
+        printf("BUEN PROGRESO 📈\n");
+        printf("Sigue practicando para mejorar tu control\n");
+    } else {
+        printf("EN ENTRENAMIENTO 🎯\n");
+        printf("El Stroop es difícil - la práctica te hará mejorar\n");
+    }
+
+    printf("\n💡 TIP:\n");
+    if (datos->errores_incongruentes > datos->errores_congruentes * 2) {
+        printf("Tus errores son mayormente en trials incongruentes.\n");
+        printf("Esto es normal - practica ignorar la palabra escrita.\n");
+    } else {
+        printf("Buen balance de errores. Intenta responder más rápido\n");
+        printf("sin sacrificar precisión.\n");
+    }
+
+    printf("\nPresiona ENTER para volver al menú...");
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+    getchar();
+}
+
