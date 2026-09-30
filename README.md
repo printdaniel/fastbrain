@@ -1,4 +1,4 @@
-# 🧠 FastBrain
+# 🧠 FastBrain|
 
 **Entrena tu cerebro con ejercicios de cálculo, reflejos y memoria**
 
